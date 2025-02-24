@@ -6,19 +6,17 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import ru.kata.spring.boot_security.demo.entity.User;
+import ru.kata.spring.boot_security.demo.repositories.RoleRepository;
 import ru.kata.spring.boot_security.demo.service.UserService;
 
-
-import java.util.List;
-
 @Controller
-@RequestMapping("/users")
 public class UsersController {
-
+    private final RoleRepository roleRepository;
     private UserService userService;
 
     @Autowired
-    UsersController(UserService userService) {
+    UsersController(RoleRepository roleRepository, UserService userService) {
+        this.roleRepository = roleRepository;
         this.userService = userService;
     }
 
@@ -34,18 +32,25 @@ public class UsersController {
 //        return "show";
 //    }
 
+//    @GetMapping("admin/adduser")
+//    public String addUser(Model model) {
+//        User user = new User();
+//        model.addAttribute("user", user);
+//        return "admin";
+  //  }
+
     @GetMapping("/adduser")
     public String addUser(Model model) {
-        User user = new User();
-        model.addAttribute("user", user);
-        return "adduser";
+        model.addAttribute("user", new User());
+        model.addAttribute("allRoles", roleRepository.findAll()); // Передаем роли в форму
+        return "add";
     }
 
-//    @PostMapping("/add")
-//    public String saveUser(@ModelAttribute("user") User user) {
-//        System.out.println("Received user: " + user.getFirstName() + " " + user.getLastName());
-//        userService.addUser(user);
-//        return "redirect:/users/allusers";
+    @PostMapping("/add")
+    public String saveUser(@ModelAttribute("user") User user) {
+        userService.saveUser(user); // Вызываем метод, который добавит роль
+        return "redirect:/users/";
+    }
 //    }
 //
 //    @GetMapping("/updateuser")

@@ -5,11 +5,15 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
+import javax.validation.constraints.*;
+
+
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
-@Data
 @Table(name = "users")
 public class User implements UserDetails {
 
@@ -18,26 +22,43 @@ public class User implements UserDetails {
     @Column(name = "id")
     private int id;
 
-    @Column(name = "username")
+    @Column(unique = true, nullable = false)
     private String username;
 
     @Column(name = "password")
     private String password;
 
-    @Column(name = "birthyear")
-    private int birthyear;
+    @Size(min = 1, message = "Имя не должно быть пустым")
+    @Pattern(regexp = "^(|[A-Za-zА-Яа-яЁё]+)$", message = "Имя должно содержать только буквы")
+    @Column(name = "firstname")
+    private String firstName;
 
-    @ManyToMany
+    @Size(min = 1, message = "Фамилия не должна быть пустой")
+    @Pattern(regexp = "^(|[A-Za-zА-Яа-яЁё]+)$", message = "Фамилия должна содержать только буквы")
+    @Column(name = "lastname")
+    private String lastName;
+
+    @Min(value = 13, message = "Сервис доступен только пользователям от 13 лет")
+    @Column(name = "age")
+    private int age;
+
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT TRUE")
+    private boolean enabled;
+
+    @ManyToMany(fetch = FetchType.EAGER) // Загружаем роли сразу
     @JoinTable(
             name = "users_roles",
             joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "roles_id"))
-    private Collection<Role> roles;
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles = new HashSet<>();
 
     public User() {
 
     }
-
+    public void addRole(Role role) {
+        this.roles.add(role);
+    }
     public int getId() {
         return id;
     }
@@ -46,12 +67,28 @@ public class User implements UserDetails {
         this.id = id;
     }
 
-    public int getBirthyear() {
-        return birthyear;
+    public String getFirstName() {
+        return firstName;
     }
 
-    public void setBirthyear(int age) {
-        this.birthyear = age;
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     @Override
@@ -63,7 +100,7 @@ public class User implements UserDetails {
         return roles;
     }
 
-    public void setRoles(Collection<Role> roles) {
+    public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
 
@@ -108,11 +145,9 @@ public class User implements UserDetails {
     public String toString() {
         return "User{" +
                 "id=" + id +
-                ", firstName='" + username + '\'' +
-                ", lastName='" + password + '\'' +
-                ", age=" + birthyear +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", age=" + age +
                 '}';
     }
-
-
 }
